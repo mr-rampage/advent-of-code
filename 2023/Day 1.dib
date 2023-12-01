@@ -1,0 +1,123 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!markdown
+
+# Day 1: Trebuchet?!
+
+The newly-improved calibration document consists of lines of text; each line originally contained a specific calibration value that the Elves now need to recover. On each line, the calibration value can be found by combining the first digit and the last digit (in that order) to form a single two-digit number.
+
+Consider your entire calibration document. What is the sum of all of the calibration values?
+
+#!markdown
+
+## Part 1
+
+#!fsharp
+
+open System.Text.RegularExpressions
+module Data =
+    let load fileName =
+        File.ReadLines fileName
+
+module Trebuchet =
+    let private removeLetters input =
+        Regex.Replace(input, "[A-Za-z]", "")
+        
+    let private takeFirstLastOnly input =
+         $"{Seq.head input}{Seq.last input}"
+         
+    let calibrate calibrationValue =
+        calibrationValue
+        |> removeLetters
+        |> takeFirstLastOnly
+        |> int
+
+#!markdown
+
+### Test
+
+#!fsharp
+
+@"Day 1 - Part 1 - Test.txt"
+|> Data.load
+|> Seq.map Trebuchet.calibrate
+|> Seq.sum
+
+#!markdown
+
+### Solution
+
+#!fsharp
+
+@"Day 1 - Part 1.txt"
+|> Data.load 
+|> Seq.map Trebuchet.calibrate
+|> Seq.sum
+
+#!markdown
+
+# Part 2
+
+It looks like some of the digits are actually spelled out with letters: one, two, three, four, five, six, seven, eight, and nine also count as valid "digits". 
+
+#!fsharp
+
+module Combinator =
+    let Φ a b c d =
+        a (b d) (c d)
+        
+module Trebuchet =
+    open Combinator
+    open System.Text.RegularExpressions
+    
+    let private remap (number: string) =
+        match number with
+        | "one" -> "1"
+        | "two" -> "2"
+        | "three" -> "3"
+        | "four" -> "4"
+        | "five" -> "5"
+        | "six" -> "6"
+        | "seven" -> "7"
+        | "eight" -> "8"
+        | "nine" -> "9"
+        | _ -> number
+
+    let private matchLeft (regexPattern: string) =
+        Regex regexPattern
+
+    let private matchRight (regexPattern: string) =
+        Regex(regexPattern, RegexOptions.RightToLeft)
+        
+    let private find (regex: Regex) (input: string) =
+        regex.Match(input).Value
+        |> remap
+        
+    let calibrate =
+        (<|) (Φ (Φ (+)) (matchLeft >> find) (matchRight >> find))
+
+#!markdown
+
+### Test
+
+#!fsharp
+
+let pattern = "[1-9]|one|two|three|four|five|six|seven|eight|nine"
+
+"Day 1 - Part 2 - Test.txt"
+|> Data.load
+|> Seq.map (Trebuchet.calibrate pattern >> int)
+|> Seq.sum
+
+#!markdown
+
+### Solution
+
+#!fsharp
+
+"Day 1 - Part 2.txt"
+|> Data.load
+|> Seq.map (Trebuchet.calibrate pattern >> int)
+|> Seq.sum
